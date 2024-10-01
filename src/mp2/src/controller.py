@@ -15,7 +15,7 @@ class vehicleController():
         self.controlPub = rospy.Publisher("/ackermann_cmd", AckermannDrive, queue_size = 1)
         self.prev_vel = 0
         self.L = 1.75 # Wheelbase, can be get from gem_control.py
-        self.log_acceleration = False
+        self.log_acceleration = True
 
     def getModelState(self):
         # Get the current state of the vehicle
@@ -71,7 +71,7 @@ class vehicleController():
     def longititudal_controller(self, curr_x, curr_y, curr_vel, curr_yaw, future_unreached_waypoints):
 
         ####################### TODO: Your TASK 2 code starts Here #######################
-        target_velocity = 12
+        target_velocity = 15
 
         # Get the future point
         target_x, target_y = future_unreached_waypoints[0]
@@ -79,7 +79,7 @@ class vehicleController():
         t_yaw = math.atan2(target_y-curr_y, target_x-curr_x)
 
         # We choose a threshold
-        threshold = math.pi/18
+        threshold = math.pi/36
 
         diff = abs(t_yaw-curr_yaw)
 
@@ -97,7 +97,23 @@ class vehicleController():
         ####################### TODO: Your TASK 3 code starts Here #######################
         target_steering = 0
 
-        target_x, target_y = target_point
+        # Kdd = 0.2
+
+        far_target_index = 2
+
+        # Check future points
+        if len(future_unreached_waypoints)< far_target_index + 1:
+            far_target_index = len(future_unreached_waypoints) - 1
+
+        far_target = future_unreached_waypoints[far_target_index]
+
+        fraction_far = 0.15
+
+        target_x = far_target[0] * fraction_far + target_point[0] * (1-fraction_far)
+        target_y = far_target[1] * fraction_far + target_point[1] * (1-fraction_far)
+
+
+        # target_x, target_y = interplate_point
         
         #  ld
         ld = ((target_x-curr_x)**2 + (target_y-curr_y)**2)**0.5
