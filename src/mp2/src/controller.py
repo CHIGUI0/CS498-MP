@@ -42,6 +42,26 @@ class vehicleController():
         ####################### TODO: Your TASK 1 code starts Here #######################
         pos_x, pos_y, vel, yaw = 0, 0, 0, 0
 
+        msg = currentPose
+
+        # Position
+        pos_x = msg.pose.position.x
+        pos_y = msg.pose.position.y
+
+        # Velocity
+        vel_x = msg.twist.linear.x
+        vel_y = msg.twist.linear.y
+        vel = (vel_x**2 + vel_y**2)**0.5  # Total linear velocity in the XY plane
+    
+        # Extract orientation and convert to yaw
+
+        _, _, yaw = quaternion_to_euler(
+            msg.pose.orientation.x,
+            msg.pose.orientation.y,
+            msg.pose.orientation.z,
+            msg.pose.orientation.w)
+
+
         ####################### TODO: Your Task 1 code ends Here #######################
 
         return pos_x, pos_y, vel, yaw # note that yaw is in radian
@@ -51,8 +71,21 @@ class vehicleController():
     def longititudal_controller(self, curr_x, curr_y, curr_vel, curr_yaw, future_unreached_waypoints):
 
         ####################### TODO: Your TASK 2 code starts Here #######################
-        target_velocity = 10
+        target_velocity = 12
 
+        # Get the future point
+        target_x, target_y = future_unreached_waypoints[0]
+        
+        t_yaw = math.atan2(target_y-curr_y, target_x-curr_x)
+
+        # We choose a threshold
+        threshold = math.pi/18
+
+        diff = abs(t_yaw-curr_yaw)
+
+        # Turn
+        if diff > threshold:
+            target_velocity = 8
 
         ####################### TODO: Your TASK 2 code ends Here #######################
         return target_velocity
@@ -63,6 +96,18 @@ class vehicleController():
 
         ####################### TODO: Your TASK 3 code starts Here #######################
         target_steering = 0
+
+        target_x, target_y = target_point
+        
+        #  ld
+        ld = ((target_x-curr_x)**2 + (target_y-curr_y)**2)**0.5
+
+        t_yaw = math.atan2(target_y-curr_y, target_x-curr_x)
+
+        diff = t_yaw-curr_yaw
+
+        target_steering = math.atan(2*self.L*math.sin(diff)/ld)
+
 
         ####################### TODO: Your TASK 3 code starts Here #######################
         return target_steering
