@@ -20,9 +20,9 @@ class lanenet_detector():
         self.bridge = CvBridge()
         # NOTE
         # Uncomment this line for lane detection of GEM car in Gazebo
-        self.sub_image = rospy.Subscriber('/gem/front_single_camera/front_single_camera/image_raw', Image, self.img_callback, queue_size=1)
+        # self.sub_image = rospy.Subscriber('/gem/front_single_camera/front_single_camera/image_raw', Image, self.img_callback, queue_size=1)
         # Uncomment this line for lane detection of videos in rosbag
-        # self.sub_image = rospy.Subscriber('camera/image_raw', Image, self.img_callback, queue_size=1)
+        self.sub_image = rospy.Subscriber('camera/image_raw', Image, self.img_callback, queue_size=1)
         self.pub_image = rospy.Publisher("lane_detection/annotate", Image, queue_size=1)
         self.pub_bird = rospy.Publisher("lane_detection/birdseye", Image, queue_size=1)
         self.left_line = Line(n=5)
@@ -62,7 +62,28 @@ class lanenet_detector():
         #4. Use cv2.addWeighted() to combine the results
         #5. Convert each pixel to unint8, then apply threshold to get binary image
 
+        self.show_img(img)
+
         ## TODO
+        gray_img = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
+
+        blurredimg = cv2.GaussianBlur(gray_img, (15, 15),0)
+
+        self.show_img(blurredimg)
+
+        sobelx = cv2.Sobel(blurredimg,cv2.CV_64F,1,0,ksize=3)
+
+        sobely = cv2.Sobel(blurredimg,cv2.CV_64F,0,1,ksize=3)
+
+        sobel = cv2.addWeighted(np.abs(sobelx), 0.5, np.abs(sobely), 0.5, 0)
+        sobel_combined_uint8 = cv2.convertScaleAbs(sobel)
+
+        # First lower bound threshold
+        _, lower_output = cv2.threshold(sobel_combined_uint8, thresh_min, 1, cv2.THRESH_BINARY)
+        # Second upper bound threshold
+        _, upper_inverse_output = cv2.threshold(sobel_combined_uint8, thresh_max, 1, cv2.THRESH_BINARY_INV)
+
+        binary_output = cv2.bitwise_and(lower_output, upper_inverse_output)
 
         ####
 
@@ -77,10 +98,63 @@ class lanenet_detector():
         #2. Apply threshold on S channel to get binary image
         #Hint: threshold on H to remove green grass
         ## TODO
+        image_hls = cv2.cvtColor(img, cv2.COLOR_RGB2HLS)
 
-        ####
+        # Uncomment this block for lane detection of Bags 0011&0056
+        # Parameters for Bags 0011&0056
+        # Extended Yellow HLS ranges
+        yellow_lower = np.array([15, 100, 100])  # Lower hue to capture more yellow shades
+        yellow_upper = np.array([45, 255, 255])  # Higher hue to capture more yellow shades
+
+        # Extended White HLS ranges
+        white_lower = np.array([0, 200, 0])      # Lower saturation to include near-whites
+        white_upper = np.array([255,250,100])  # Higher lightness to include brighter whites
+
+
+        # Uncomment this block for lane detection of Test
+        # Parameters for Test
+        # Extended Yellow HLS ranges
+        # yellow_lower = np.array([15, 100, 100])  # Lower hue to capture more yellow shades
+        # yellow_upper = np.array([45, 255, 255])  # Higher hue to capture more yellow shades
+
+        # # Extended White HLS ranges
+        # white_lower = np.array([0, 180, 0])      # Lower saturation to include near-whites
+        # white_upper = np.array([255, 255, 150])  # Higher lightness to include brighter whites        
+
+        # Uncomment this block for lane detection of Bag 0484
+        # Parameter for Bag 0484
+        # # Extended Yellow HLS ranges
+        # yellow_lower = np.array([15, 100, 100])  # Lower hue to capture more yellow shades
+        # yellow_upper = np.array([45, 255, 255])  # Higher hue to capture more yellow shades
+
+        # # Extended Grey HLS ranges
+        # white_lower = np.array([0, 255*0.3, 0])      # Lower saturation to include near-whites
+        # white_upper = np.array([255, 255*0.6, 50])  # Higher lightness to include brighter whites
+
+        # Step 4: Create masks for yellow and white
+        yellow_mask = cv2.inRange(image_hls, yellow_lower, yellow_upper)
+        white_mask = cv2.inRange(image_hls, white_lower, white_upper)
+
+        # Step 5: Combine masks (optional)
+        combined_mask = cv2.bitwise_or(yellow_mask, white_mask)
+
+        # Step 6: Convert the mask to a single channel with 255 for yellow/white and 0 otherwise
+        single_channel = np.zeros_like(combined_mask)
+        single_channel[combined_mask > 0] = 1  # Set the selected colors to white
+
+        # Step 6: Apply the mask to the original image
+        binary_output = single_channel
 
         return binary_output
+    
+    def show_img(self, img):
+        # return
+        umat_sobel = cv2.UMat(img)
+        umat_img = umat_sobel
+        window_name = "origin"
+        cv2.imshow(window_name,umat_img)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
 
 
     def combinedBinaryImage(self, img):
@@ -91,14 +165,27 @@ class lanenet_detector():
         #2. Combine the outputs
         ## Here you can use as many methods as you want.
 
+        # cv2.imwrite("/home/lab-station2/Desktop/mp-release-fa24/src/mp1/test.png", img)
         ## TODO
 
-        ####
+        # Uncomment this block for lane detection of Bags 0484
+        # For 0484
+        # SobelOutput = self.gradient_thresh(img,35,255)
+        
+        # Uncomment this block for lane detection of Others
+        # For Others
+        SobelOutput = self.gradient_thresh(img,50,150)
+        self.show_img(SobelOutput*255)
+
+        ColorOutput = self.color_thresh(img,(230,1))
+        self.show_img(ColorOutput*255)
 
         binaryImage = np.zeros_like(SobelOutput)
         binaryImage[(ColorOutput==1)|(SobelOutput==1)] = 1
         # Remove noise from binary image
         binaryImage = morphology.remove_small_objects(binaryImage.astype('bool'),min_size=50,connectivity=2)
+
+        binaryImage = (binaryImage*255).astype(np.uint8)
 
         return binaryImage
 
@@ -112,17 +199,38 @@ class lanenet_detector():
         #3. Generate warped image in bird view using cv2.warpPerspective()
 
         ## TODO
+        
+        shape_x = img.shape[1]
+        shape_y = img.shape[0]
+        
+        # Uncomment this block for lane detection of Bags 0011&0056
+        # For Bag-0011&0056
+        src_points = np.float32([[1/3*shape_x,3/5*shape_y],[2/3*shape_x,3/5*shape_y],[shape_x-20,shape_y-20],[20,shape_y-20]])
+        dst_points = np.float32([[20,20],[shape_x-20,20],[shape_x-20,shape_y-20],[20,shape_y-20]])
 
-        ####
+        # Uncomment this block for lane detection of Test
+        # For test
+        # src_points = np.float32([[1/3*shape_x,1/2*shape_y],[2/3*shape_x,1/2*shape_y],[shape_x-20,shape_y-20],[20,shape_y-20]])
+        # dst_points = np.float32([[20,20],[shape_x-20,20],[shape_x-20,shape_y-20],[20,shape_y-20]])
+
+        # Uncomment this block for lane detection of Bag 0484
+        # For 0484
+        # src_points = np.float32([[570,4/5*shape_y],[2/3*shape_x,4/5*shape_y],[shape_x-20,shape_y-20],[420,shape_y-20]])
+        # dst_points = np.float32([[20,20],[shape_x-20,20],[shape_x-20,shape_y-20],[20 + 0.45*shape_x,shape_y-20]])
+
+        M = cv2.getPerspectiveTransform(src_points, dst_points)
+        Minv = cv2.getPerspectiveTransform(dst_points, src_points)
+
+        warped_img = cv2.warpPerspective(img, M, (img.shape[1], img.shape[0]),flags=cv2.INTER_LINEAR)  
 
         return warped_img, M, Minv
 
 
     def detection(self, img):
 
+        # self.show_img(img)
         binary_img = self.combinedBinaryImage(img)
         img_birdeye, M, Minv = self.perspective_transform(binary_img)
-
         if not self.hist:
             # Fit lane without previous result
             ret = line_fit(img_birdeye)

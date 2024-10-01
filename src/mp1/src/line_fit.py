@@ -46,25 +46,46 @@ def line_fit(binary_warped):
 	for window in range(nwindows):
 		# Identify window boundaries in x and y (and right and left)
 		##TO DO
+		ylow = binary_warped.shape[0]-(window+1) * window_height
+		yhigh = binary_warped.shape[0]-window * window_height
+		xleftlow = leftx_current-margin
+		xlefthigh = leftx_current+margin
+		xrightlow = rightx_current-margin
+		xrighthigh = rightx_current+margin
 
+		leftc1 = (xleftlow,ylow)
+		rightc1 = (xlefthigh,yhigh)
+		leftc2 = (xrightlow,ylow)
+		rightc2 = (xrighthigh,yhigh)
 		####
 		# Draw the windows on the visualization image using cv2.rectangle()
 		##TO DO
+		cv2.rectangle(binary_warped, leftc1, rightc1,(0,255,0))
+		cv2.rectangle(binary_warped, leftc2, rightc2,(0,255,0))
 
 		####
 		# Identify the nonzero pixels in x and y within the window
 		##TO DO
-
+		good_left_inds = ((nonzerox >= xleftlow) & (nonzerox <= xlefthigh) & 
+                          (nonzeroy >= ylow) & (nonzeroy < yhigh)).nonzero()[0]
+        
+		good_right_inds = ((nonzerox >= xrightlow) & (nonzerox <= xrighthigh) & 
+                           (nonzeroy >= ylow) & (nonzeroy < yhigh)).nonzero()[0]
 		####
 		# Append these indices to the lists
 		##TO DO
+		left_lane_inds.append(good_left_inds)
+		right_lane_inds.append(good_right_inds)
 
 		####
 		# If you found > minpix pixels, recenter next window on their mean position
 		##TO DO
-
+		if len(good_left_inds) > minpix:
+			leftx_current = int(np.mean(nonzerox[good_left_inds]))
+		if len(good_right_inds) > minpix:
+			rightx_current = int(np.mean(nonzerox[good_right_inds]))
 		####
-		pass
+		
 
 	# Concatenate the arrays of indices
 	left_lane_inds = np.concatenate(left_lane_inds)
@@ -82,7 +103,8 @@ def line_fit(binary_warped):
 	# Thus, it is unable to detect edges.
 	try:
 	##TODO
-
+		left_fit = np.polyfit(lefty, leftx, 2)  # Fit polynomial to left lane
+		right_fit = np.polyfit(righty, rightx, 2)
 	####
 	except TypeError:
 		print("Unable to detect lanes")

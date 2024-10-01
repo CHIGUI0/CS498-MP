@@ -14,7 +14,7 @@ def filter_gaussian(input_img):
     img = input_img.copy()
     # TO-DO
     # YOUR CODE HERE
-    # img = cv2.GaussianBlur(?)
+    img = cv2.GaussianBlur(img,(5,5),0)
 
     # YOUR CODE ENDS HERE
     return img
@@ -23,7 +23,7 @@ def filter_median(input_img):
     img = input_img.copy()
     # TO-DO
     # YOUR CODE HERE
-    # img = cv2.medianBlur(?)
+    img = cv2.medianBlur(img,5)
 
     # YOUR CODE ENDS HERE
     return img
@@ -31,7 +31,8 @@ def filter_median(input_img):
 if __name__ == '__main__':
     # Get path
     rospack = rospkg.RosPack()
-    mp1_path = rospack.get_path('mp1')
+    # mp1_path = rospack.get_path('mp1')
+    mp1_path = "/home/lab-station2/Desktop/mp-release-fa24/src/mp1"
     sp_img_path = os.path.join(mp1_path, 'images', 'salt_and_pepper.jpg')
     ga_img_path = os.path.join(mp1_path, 'images', 'gaussian.jpg')
     result_sp_img_ga_filter_path = os.path.join(mp1_path, 'images', 'results',
