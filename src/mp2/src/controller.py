@@ -17,6 +17,12 @@ class vehicleController():
         self.L = 1.75 # Wheelbase, can be get from gem_control.py
         self.log_acceleration = True
 
+
+        # Record the acceleration and Position
+        self.acceleration = []
+        self.position_x = []
+        self.position_y = []
+
     def getModelState(self):
         # Get the current state of the vehicle
         # Input: None
@@ -87,6 +93,11 @@ class vehicleController():
         if diff > threshold:
             target_velocity = 8
 
+        v_threshold = 7
+        if target_velocity - curr_vel > v_threshold:
+            target_velocity = curr_vel + v_threshold - 1
+
+
         ####################### TODO: Your TASK 2 code ends Here #######################
         return target_velocity
 
@@ -143,8 +154,13 @@ class vehicleController():
         # Acceleration Profile
         if self.log_acceleration:
             acceleration = (curr_vel- self.prev_vel) * 100 # Since we are running in 100Hz
+            self.acceleration.append(acceleration)
 
+        self.position_x.append(curr_x)
+        self.position_y.append(curr_y)
 
+        self.prev_vel = curr_vel
+        
 
         target_velocity = self.longititudal_controller(curr_x, curr_y, curr_vel, curr_yaw, future_unreached_waypoints)
         target_steering = self.pure_pursuit_lateral_controller(curr_x, curr_y, curr_yaw, target_point, future_unreached_waypoints)
@@ -157,6 +173,37 @@ class vehicleController():
 
         # Publish the computed control input to vehicle model
         self.controlPub.publish(newAckermannCmd)
+
+        if len(future_unreached_waypoints) == 0:
+            import matplotlib.pyplot as plt
+            accelerate_record = self.acceleration
+            point_x_record = self.position_x
+            point_y_record = self.position_y
+
+            dt = 0.1  # Example time step in seconds
+            time = np.arange(0, len(accelerate_record) * dt, dt)
+
+            # Create Time-Acceleration Graph
+            plt.figure(figsize=(10, 5))
+            plt.plot(time, accelerate_record, color='blue', label='Acceleration (m/s²)')
+            plt.title("Time vs Acceleration")
+            plt.xlabel("Time (s)")
+            plt.ylabel("Acceleration (m/s²)")
+            plt.grid(True)
+            plt.legend()
+            plt.savefig('time_acceleration_graph.png')  # Save as PNG
+            plt.close()  # Close the figure
+
+            # Create X,Y Graph
+            plt.figure(figsize=(10, 5))
+            plt.plot(point_x_record, point_y_record, color='green', linestyle='-', marker='o', markersize=5, label='Path (X vs Y)')
+            plt.title("X vs Y Position")
+            plt.xlabel("X Position")
+            plt.ylabel("Y Position")
+            plt.grid(True)
+            plt.legend()
+            plt.savefig('xy_graph.png')  # Save as PNG
+            plt.close()  # Close the figure
 
     def stop(self):
         newAckermannCmd = AckermannDrive()
