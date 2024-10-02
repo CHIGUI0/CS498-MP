@@ -174,37 +174,6 @@ class vehicleController():
         # Publish the computed control input to vehicle model
         self.controlPub.publish(newAckermannCmd)
 
-        if len(future_unreached_waypoints) == 0:
-            import matplotlib.pyplot as plt
-            accelerate_record = self.acceleration
-            point_x_record = self.position_x
-            point_y_record = self.position_y
-
-            dt = 0.1  # Example time step in seconds
-            time = np.arange(0, len(accelerate_record) * dt, dt)
-
-            # Create Time-Acceleration Graph
-            plt.figure(figsize=(10, 5))
-            plt.plot(time, accelerate_record, color='blue', label='Acceleration (m/s²)')
-            plt.title("Time vs Acceleration")
-            plt.xlabel("Time (s)")
-            plt.ylabel("Acceleration (m/s²)")
-            plt.grid(True)
-            plt.legend()
-            plt.savefig('time_acceleration_graph.png')  # Save as PNG
-            plt.close()  # Close the figure
-
-            # Create X,Y Graph
-            plt.figure(figsize=(10, 5))
-            plt.plot(point_x_record, point_y_record, color='green', linestyle='-', marker='o', markersize=5, label='Path (X vs Y)')
-            plt.title("X vs Y Position")
-            plt.xlabel("X Position")
-            plt.ylabel("Y Position")
-            plt.grid(True)
-            plt.legend()
-            plt.savefig('xy_graph.png')  # Save as PNG
-            plt.close()  # Close the figure
-
     def stop(self):
         newAckermannCmd = AckermannDrive()
         newAckermannCmd.speed = 0

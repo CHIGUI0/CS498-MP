@@ -58,9 +58,17 @@ if __name__ == "__main__":
     y_default = -98
     yaw_default = 0
 
-    # x_default = 160
-    # y_default = 96.5
-    # yaw_default = 3.14
+    # # Range Test x[0:3] y[-97.5:-98.5] yaw[-0.1:0.1]
+
+    # # Edge 1 test
+    # x_default = 3
+    # y_default = -98.5
+    # yaw_default = 0.1
+
+    # # Edge 2 test
+    # x_default = 3
+    # y_default = -97.5
+    # yaw_default = -0.1
 
 
     parser.add_argument('--x', type = float, help = 'x position of the vehicle.', default = x_default)

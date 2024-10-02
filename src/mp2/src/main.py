@@ -18,9 +18,42 @@ def run_model():
 
     target_x, target_y = pos_list[pos_idx]
 
+    def draw():
+        import matplotlib.pyplot as plt
+        accelerate_record = controller.acceleration
+        point_x_record = controller.position_x
+        point_y_record = controller.position_y
+
+        dt = 0.1  # Example time step in seconds
+        time = np.arange(0, len(accelerate_record) * dt, dt)
+
+        # Create Time-Acceleration Graph
+        plt.figure(figsize=(10, 5))
+        plt.plot(time, accelerate_record, color='blue', label='Acceleration (m/s²)')
+        plt.title("Time vs Acceleration")
+        plt.xlabel("Time (10ms)")
+        plt.ylabel("Acceleration (m/s²)")
+        plt.grid(True)
+        plt.legend()
+        plt.savefig('time_acceleration_graph.png')  # Save as PNG
+        plt.close()  # Close the figure
+
+        # Create X,Y Graph
+        plt.figure(figsize=(10, 5))
+        plt.plot(point_x_record, point_y_record, color='green', linestyle='-', marker='o', markersize=5, label='Path (X vs Y)')
+        plt.title("X vs Y Position")
+        plt.xlabel("X Position")
+        plt.ylabel("Y Position")
+        plt.grid(True)
+        plt.legend()
+        plt.savefig('xy_graph.png')  # Save as PNG
+        plt.close()  # Close the figure
+
+
     def shutdown():
         """Stop the car when this ROS node shuts down"""
         controller.stop()
+        draw()
         rospy.loginfo("Stop the car")
 
     rospy.on_shutdown(shutdown)
