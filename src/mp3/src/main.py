@@ -77,8 +77,8 @@ if __name__ == '__main__':
     window_height_default = 750
 
     # Default values for the parameters for particle filter
-    num_particles_default = 2000
-    sensor_limit_default = 15
+    num_particles_default = 1000
+    sensor_limit_default = 20
     # measurement_noise_default = False #FIXME
     measurement_noise_default = False 
 
