@@ -180,8 +180,6 @@ class particleFilter:
             You can either use ode function or vehicle_dynamics function provided above
         """
         ## TODO #####
-        print(f"control len:{len(self.control)}")
-
         for particle in self.particles:
             for c in self.control:
                 vars = [particle.x, particle.y, particle.heading]
@@ -209,7 +207,6 @@ class particleFilter:
             self.updateWeight(readings_robot)
             self.resampleParticle()
             count += 1
-            print(self.particles[0].x, self.particles[0].y)   
             ###############
 
             # Show robot and particles
