@@ -9,6 +9,8 @@ from std_msgs.msg import Float32MultiArray
 from scipy.integrate import ode
 import copy
 
+import matplotlib.pyplot as plt
+
 import random
 
 def vehicle_dynamics(t, vars, vr, delta):
@@ -26,6 +28,8 @@ class particleFilter:
         self.num_particles = num_particles  # The number of particles for the particle filter
         self.sensor_limit = sensor_limit    # The sensor limit of the sensor
         particles = list()
+
+        self.errors = []
 
         self.count = 0
 
@@ -203,20 +207,44 @@ class particleFilter:
         Description:
             Run PF localization
         """
-        count = 0 
-        while True:
-            ## TODO: (i) Implement Section 3.2.2. (ii) Display robot and particles on map. (iii) Compute and save position/heading error to plot. #####
-            self.particleMotionModel()
-            readings_robot = self.bob.read_sensor()
-            self.updateWeight(readings_robot)
-            self.resampleParticle()
-            count += 1
-            self.count += 1
-            ###############
+        try:
+            count = 0 
+            while True:
+                ## TODO: (i) Implement Section 3.2.2. (ii) Display robot and particles on map. (iii) Compute and save position/heading error to plot. #####
+                self.particleMotionModel()
+                readings_robot = self.bob.read_sensor()
+                self.updateWeight(readings_robot)
+                self.resampleParticle()
+                count += 1
+                self.count += 1
+                ###############
 
-            # Show robot and particles
-            self.world.clear_objects()
-            self.world.show_particles(self.particles)
-            self.world.show_estimated_location(self.particles)
-            self.world.show_robot(self.bob)
+                # Show robot and particles
+                self.world.clear_objects()
+                self.world.show_particles(self.particles, show_frequency = 1)
+                [x_estimate,y_estimate,heading] = self.world.show_estimated_location(self.particles)
+                self.world.show_robot(self.bob)
 
+                    # Calculate error in the robot's position
+                error = ((self.bob.x - x_estimate) ** 2 + (self.bob.y - y_estimate) ** 2) ** 0.5
+                self.errors.append(error)  # Append the error to the list for plotting later
+
+                # Optional: Print out the error for debugging
+                print(f"Count: {count}, Error: {error}")
+
+        except KeyboardInterrupt:
+            print("Shutting down... Drawing the error graph.")
+            self.plot_errors(self.errors)  # Draw the error graph
+            print("Shutdown complete.")
+
+    def plot_errors(self, errors):
+        plt.figure(figsize=(10, 5))
+        plt.plot(errors, label='Position Error', color='red')
+        plt.title('Robot Localization Error Over Time')
+        plt.xlabel('Time Steps')
+        plt.ylabel('Error (meters)')
+        plt.legend()
+        plt.grid()
+        # Save the figure as a PNG file
+        plt.savefig('Q1_fig_1500_15.png')  # Save the plot as 'robot_localization_error.png'
+        plt.close()  # Close the figure to free up memory
