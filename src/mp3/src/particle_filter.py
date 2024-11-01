@@ -27,6 +27,8 @@ class particleFilter:
         self.sensor_limit = sensor_limit    # The sensor limit of the sensor
         particles = list()
 
+        self.count = 0
+
         ##### TODO:  #####
         # Modify the initial particle distribution to be within the top-right quadrant of the world, and compare the performance with the whole map distribution.
         for i in range(num_particles):
@@ -152,9 +154,11 @@ class particleFilter:
             # Create a deep copy of the selected particle
             new_particle = copy.deepcopy(self.particles[index])
             
+            if self.count > 100:
+                self.count = 90
             # Optionally perturb the position
-            new_particle.x += np.random.uniform(-0.5, 0.5)
-            new_particle.y += np.random.uniform(-0.5, 0.5)
+            new_particle.x += np.random.uniform(-1, 1) * ((100-self.count)/100)
+            new_particle.y += np.random.uniform(-1, 1) * ((100-self.count)/100)
             # new_particle.heading = np.random.uniform(0,2*np.pi)
             new_particle.heading += np.random.uniform(-5/180 * np.pi, 5/180 * np.pi)
 
@@ -207,6 +211,7 @@ class particleFilter:
             self.updateWeight(readings_robot)
             self.resampleParticle()
             count += 1
+            self.count += 1
             ###############
 
             # Show robot and particles
