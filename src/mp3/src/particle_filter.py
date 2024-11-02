@@ -43,8 +43,8 @@ class particleFilter:
 
 
             ## first quadrant
-            # x = 
-            # y =
+            #x = np.random.uniform(world.width/2, world.width)
+            #y = np.random.uniform(world.height/2, world.height)
 
             particles.append(Particle(x = x, y = y, maze = world, sensor_limit = sensor_limit))
 
