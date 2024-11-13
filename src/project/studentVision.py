@@ -11,6 +11,7 @@ from std_msgs.msg import Header
 from cv_bridge import CvBridge, CvBridgeError
 from std_msgs.msg import Float32
 from skimage import morphology
+from std_msgs.msg import Float32MultiArray
 
 
 
@@ -25,11 +26,26 @@ class lanenet_detector():
         self.sub_image = rospy.Subscriber('/D435I/color/image_raw', Image, self.img_callback, queue_size=1)
         self.pub_image = rospy.Publisher("lane_detection/annotate", Image, queue_size=1)
         self.pub_bird = rospy.Publisher("lane_detection/birdseye", Image, queue_size=1)
+        self.line_coefficients = [0.0, 0.0, 0.0]
+        # Publish three fload values
+        self.pub_fit_line_coeff = rospy.Publisher("lane_detection/fit_line_coeff", Float32MultiArray, queue_size=1)
+        
         self.left_line = Line(n=5)
         self.right_line = Line(n=5)
         self.detected = False
         self.hist = True
 
+
+    def publish_coefficients(self):
+        # 创建一个Float32MultiArray消息
+        coeff_msg = Float32MultiArray()
+        
+        # 将系数列表分配到消息的数据字段中
+        coeff_msg.data = self.line_coefficients
+        
+        # 发布消息
+        self.pub_fit_line_coeff.publish(coeff_msg)
+        rospy.loginfo(f"Published coefficients: {self.line_coefficients}")
 
     def img_callback(self, data):
 
@@ -306,6 +322,10 @@ class lanenet_detector():
             combine_fit_img = None
             if ret is not None:
                 bird_fit_img = bird_fit(img_birdeye, ret, save_file=None)
+                # Publish ret information
+                self.line_coefficients = [mid_fit[0], mid_fit[1], mid_fit[2]]
+                self.publish_coefficients()
+                
                 # combine_fit_img = final_viz(img, left_fit, right_fit, Minv)
             else:
                 print("Unable to detect lanes")
