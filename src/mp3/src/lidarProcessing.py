@@ -165,40 +165,40 @@ class LidarProcessing:
         ## TODO: Add 4 additional sensor directions #####
         # Handle sensor at 4 diagnal direction
         # Getting sensor reading for top-left
-        # filter_front_left = np.logical_and((x_points > 0), (y_points > 0))
-        # filter_front_left = np.logical_and(filter_front_left, np.abs(x_points-y_points) < 0.1*np.sqrt(2))
-        # filter_front_left = np.logical_and(filter_front_left, pixel_vals > 128)
-        # indices = np.argwhere(filter_front_left).flatten()
+        filter_front_left = np.logical_and((x_points > 0), (y_points > 0))
+        filter_front_left = np.logical_and(filter_front_left, np.abs(x_points-y_points) < 0.1*np.sqrt(2))
+        filter_front_left = np.logical_and(filter_front_left, pixel_vals > 128)
+        indices = np.argwhere(filter_front_left).flatten()
 
-        # self.x_front_left = np.mean(x_points[indices])
-        # self.y_front_left = np.mean(y_points[indices])
+        self.x_front_left = np.mean(x_points[indices])
+        self.y_front_left = np.mean(y_points[indices])
 
-        # # Getting sensor reading for top-right
-        # filter_front_right = np.logical_and((x_points < 0), (y_points > 0))
-        # filter_front_right = np.logical_and(filter_front_right, np.abs(x_points+y_points) < 0.1*np.sqrt(2))
-        # filter_front_right = np.logical_and(filter_front_right, pixel_vals > 128)
-        # indices = np.argwhere(filter_front_right).flatten()
+        # Getting sensor reading for top-right
+        filter_front_right = np.logical_and((x_points < 0), (y_points > 0))
+        filter_front_right = np.logical_and(filter_front_right, np.abs(x_points+y_points) < 0.1*np.sqrt(2))
+        filter_front_right = np.logical_and(filter_front_right, pixel_vals > 128)
+        indices = np.argwhere(filter_front_right).flatten()
 
-        # self.x_front_right = np.mean(x_points[indices])
-        # self.y_front_right = np.mean(y_points[indices])
+        self.x_front_right = np.mean(x_points[indices])
+        self.y_front_right = np.mean(y_points[indices])
 
-        # # Getting sensor reading for bottom-left
-        # filter_rear_left = np.logical_and((x_points > 0), (y_points < 0))
-        # filter_rear_left = np.logical_and(filter_rear_left, np.abs(x_points+y_points) < 0.1*np.sqrt(2))
-        # filter_rear_left = np.logical_and(filter_rear_left, pixel_vals > 128)
-        # indices = np.argwhere(filter_rear_left).flatten()
+        # Getting sensor reading for bottom-left
+        filter_rear_left = np.logical_and((x_points > 0), (y_points < 0))
+        filter_rear_left = np.logical_and(filter_rear_left, np.abs(x_points+y_points) < 0.1*np.sqrt(2))
+        filter_rear_left = np.logical_and(filter_rear_left, pixel_vals > 128)
+        indices = np.argwhere(filter_rear_left).flatten()
 
-        # self.x_rear_left = np.mean(x_points[indices])
-        # self.y_rear_left = np.mean(y_points[indices])
+        self.x_rear_left = np.mean(x_points[indices])
+        self.y_rear_left = np.mean(y_points[indices])
 
-        # # Getting sensor reading for bottom-right
-        # filter_rear_right = np.logical_and((x_points < 0), (y_points < 0))
-        # filter_rear_right = np.logical_and(filter_rear_right, np.abs(x_points-y_points) < 0.1*np.sqrt(2))
-        # filter_rear_right = np.logical_and(filter_rear_right, pixel_vals > 128)
-        # indices = np.argwhere(filter_rear_right).flatten()
+        # Getting sensor reading for bottom-right
+        filter_rear_right = np.logical_and((x_points < 0), (y_points < 0))
+        filter_rear_right = np.logical_and(filter_rear_right, np.abs(x_points-y_points) < 0.1*np.sqrt(2))
+        filter_rear_right = np.logical_and(filter_rear_right, pixel_vals > 128)
+        indices = np.argwhere(filter_rear_right).flatten()
 
-        # self.x_rear_right = np.mean(x_points[indices])
-        # self.y_rear_right = np.mean(y_points[indices])        
+        self.x_rear_right = np.mean(x_points[indices])
+        self.y_rear_right = np.mean(y_points[indices])        
         
         ###############
 

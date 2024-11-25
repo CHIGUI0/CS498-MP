@@ -77,7 +77,7 @@ if __name__ == '__main__':
     window_height_default = 750
 
     # Default values for the parameters for particle filter
-    num_particles_default = 1500
+    num_particles_default = 1000
     sensor_limit_default = 15
     # measurement_noise_default = False #FIXME
     measurement_noise_default = False 
@@ -85,7 +85,7 @@ if __name__ == '__main__':
     
     
     parser.add_argument('--num_particles', type = int, help = 'Number of particles used in particle filter.', default = num_particles_default)
-    parser.add_argument('--sensor_limit', type = float, help = 'The distance in Gazebo the sensor can sense. ', default = sensor_limit_default)
+    parser.add_argument('--sensor_limit', type = int, help = 'The distance in Gazebo the sensor can sense. ', default = sensor_limit_default)
     parser.add_argument('--measurement_noise', type = bool, help = 'Adding noise to the lidar measurement. ', default = measurement_noise_default)
 
     
@@ -96,5 +96,6 @@ if __name__ == '__main__':
     num_particles = argv.num_particles
     sensor_limit = argv.sensor_limit
     measurement_noise = argv.measurement_noise
+    print(f"measurement noise: {measurement_noise}")
     
     main(window_width = window_width, window_height = window_height, num_particles = num_particles, sensor_limit = sensor_limit, measurement_noise = measurement_noise)

@@ -31,6 +31,8 @@ class particleFilter:
 
         self.errors = []
 
+        self.head_errors = []
+
         self.count = 0
 
         ##### TODO:  #####
@@ -43,8 +45,9 @@ class particleFilter:
 
 
             ## first quadrant
-            # x = 
-            # y =
+            # x = np.random.uniform(world.width/2, world.width)
+            # y = np.random.uniform(world.height/2, world.height)
+
 
             particles.append(Particle(x = x, y = y, maze = world, sensor_limit = sensor_limit))
 
@@ -168,6 +171,7 @@ class particleFilter:
 
             # Append the new particle to the list
             particles_new.append(new_particle)
+            # particles_new.append(Particle(x = self.particles[index].x, y = self.particles[index].y, heading = self.particles[index].heading, maze = self.particles[index].maze, sensor_limit = self.particles[index].sensor_limit,  noisy = True))
 
         return particles_new
 
@@ -227,6 +231,13 @@ class particleFilter:
 
                     # Calculate error in the robot's position
                 error = ((self.bob.x - x_estimate) ** 2 + (self.bob.y - y_estimate) ** 2) ** 0.5
+
+                heading_error = (self.bob.heading - heading*np.pi/180)
+                heading_error = (heading_error + np.pi)%(2*np.pi) - np.pi
+
+                self.head_errors.append(heading_error)
+
+
                 self.errors.append(error)  # Append the error to the list for plotting later
 
                 # Optional: Print out the error for debugging
@@ -234,17 +245,18 @@ class particleFilter:
 
         except KeyboardInterrupt:
             print("Shutting down... Drawing the error graph.")
-            self.plot_errors(self.errors)  # Draw the error graph
+            self.plot_errors(self.head_errors)  # Draw the error graph
             print("Shutdown complete.")
 
     def plot_errors(self, errors):
         plt.figure(figsize=(10, 5))
-        plt.plot(errors, label='Position Error', color='red')
-        plt.title('Robot Localization Error Over Time')
+        plt.plot(errors, label='Heading Error', color='blue')
+        plt.title('Robot Heading Error Over Time')
         plt.xlabel('Time Steps')
-        plt.ylabel('Error (meters)')
+        plt.ylabel('Error (radians)')
         plt.legend()
         plt.grid()
         # Save the figure as a PNG file
-        plt.savefig('Q1_fig_1500_15.png')  # Save the plot as 'robot_localization_error.png'
+        
+        plt.savefig(f'P9_heading_fig_{self.num_particles}_{self.sensor_limit}.png')  # Save the plot as 'robot_localization_error.png'
         plt.close()  # Close the figure to free up memory

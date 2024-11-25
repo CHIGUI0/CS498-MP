@@ -286,7 +286,13 @@ class lanenet_detector():
                 combine_fit_img = final_viz(img, left_fit, right_fit, Minv)
             else:
                 print("Unable to detect lanes")
-
+            stop = True
+            import json
+            mydictret = {key: value.tolist() if isinstance(value,np.ndarray) else value for key,value in ret.items()}
+            if stop:
+                with open('ret.json','w') as file:
+                    json.dump(mydictret,file)
+                stop = False
             return combine_fit_img, bird_fit_img
 
 
