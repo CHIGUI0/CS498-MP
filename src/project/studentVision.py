@@ -28,7 +28,7 @@ class lanenet_detector():
         self.pub_bird = rospy.Publisher("lane_detection/birdseye", Image, queue_size=1)
         self.line_coefficients = [0.0, 0.0, 0.0]
         # Publish three fload values
-        self.pub_fit_line_coeff = rospy.Publisher("lane_detection/fit_line_coeff", Float32MultiArray, queue_size=1)
+        self.pub_fit_line_coeff = rospy.Publisher("/lane_detection/fit_line_coeff", Float32MultiArray, queue_size=1)
         
         self.left_line = Line(n=5)
         self.right_line = Line(n=5)
@@ -45,7 +45,7 @@ class lanenet_detector():
         
         # 发布消息
         self.pub_fit_line_coeff.publish(coeff_msg)
-        rospy.loginfo(f"Published coefficients: {self.line_coefficients}")
+        # rospy.loginfo(f"Published coefficients: {self.line_coefficients}")
 
     def img_callback(self, data):
 
@@ -80,7 +80,7 @@ class lanenet_detector():
 
         self.show_img(img)
 
-        cv2.imwrite("img.png",img)
+        # cv2.imwrite("img.png",img)
         
 
         ## TODO
@@ -205,14 +205,14 @@ class lanenet_detector():
         
         # Uncomment this block for lane detection of Others
         # For Others
-        SobelOutput = self.gradient_thresh(img,50,150)
-        self.show_img(SobelOutput*255)
+        # SobelOutput = self.gradient_thresh(img,50,150)
+        # self.show_img(SobelOutput*255)
 
         ColorOutput = self.color_thresh(img,(230,1))
         self.show_img(ColorOutput*255)
-
-        binaryImage = np.zeros_like(SobelOutput)
-        binaryImage[(ColorOutput==1)|(SobelOutput==1)] = 1
+        binaryImage = ColorOutput
+        # binaryImage = np.zeros_like(SobelOutput)
+        # binaryImage[(ColorOutput==1)|(SobelOutput==1)] = 1
         # Remove noise from binary image
         binaryImage = morphology.remove_small_objects(binaryImage.astype('bool'),min_size=50,connectivity=2)
 
@@ -329,12 +329,6 @@ class lanenet_detector():
                 # combine_fit_img = final_viz(img, left_fit, right_fit, Minv)
             else:
                 print("Unable to detect lanes")
-            import json
-            stop = True
-            if stop:
-                with open('ret.json','w') as file:
-                    json.dump(ret,file,indent=4)
-                stop= False
             
             return combine_fit_img, bird_fit_img
 

@@ -26,13 +26,18 @@ from std_msgs.msg import Float32MultiArray
 from ackermann_msgs.msg import AckermannDriveStamped
 
 
+from scipy.optimize import fsolve
+
 class PurePursuitController(object):
 
     def __init__(self):
+        # Window Size
+        self.window_x = 480
+        self.window_y = 640
 
         self.rate = rospy.Rate(80)
 
-        self.look_ahead = 0.4  # 前瞻距离，单位：米
+        self.look_ahead = 0.4 * 480/0.9  # 前瞻距离，单位：米
         self.wheelbase = 0.325  # 车辆轴距，单位：米
 
         # 发布控制指令
@@ -44,12 +49,13 @@ class PurePursuitController(object):
 
         self.drive_msg = AckermannDriveStamped()
         self.drive_msg.header.frame_id = "f1tenth_control"
-        self.drive_msg.drive.speed = 1.2  # 车辆速度，单位：米/秒
+        self.drive_msg.drive.speed = 1  # 车辆速度，单位：米/秒
+
 
         # 订阅道路曲线系数
         # 假设道路曲线的一元二次方程系数以 [a, b, c] 的形式发布在 '/road_curve' 话题上
         self.curve_sub = rospy.Subscriber(
-            '/road_curve',
+            '/lane_detection/fit_line_coeff',
             Float32MultiArray,
             self.curve_callback
         )
@@ -71,34 +77,24 @@ class PurePursuitController(object):
 
         a, b, c = self.curve_coeffs
 
-        # 假设车辆在 (0, 0)，朝向 x 轴正方向
-        # 计算沿曲线距离为 look_ahead 的点
-
-        # 为了简化计算，我们可以在 x 轴上取增量，找到与前瞻距离最接近的点
-        # 这里我们可以采用数值方法，如 bisection 或者使用小步长遍历 x
-
-        # 定义函数来计算曲线上两点之间的弧长近似
-        def compute_arc_length(x_start, x_end, num=100):
-            x = np.linspace(x_start, x_end, num)
-            y = a * x ** 2 + b * x + c
-            dx = np.diff(x)
-            dy = np.diff(y)
-            ds = np.hypot(dx, dy)
-            return np.sum(ds)
-
-        # 初始化搜索范围和精度
-        x_start = 0.0  # 从车辆当前位置开始
-        x_end = x_start + self.look_ahead  # 初始猜测
-        arc_length = 0.0
-
-        # 通过增量搜索找到满足弧长接近前瞻距离的 x 值
-        while arc_length < self.look_ahead:
-            x_end += 0.01  # 增加 x_end
-            arc_length = compute_arc_length(0.0, x_end)
-
-        # 目标点的 x 坐标为 x_end，y 坐标为对应的曲线值
-        target_x = x_end
-        target_y = a * target_x ** 2 + b * target_x + c
+        def fun_y(x):
+            a, b, c = self.curve_coeffs
+            return a*x**2 + b*x + c 
+        
+        # Distance to car position
+        def distance(x,y):
+            return ((x-0.5*self.window_x)**2 + (y-self.window_y)**2)**0.5
+        def dis(x,x0,y0,d,a,b,c):
+            y = fun_y(x)
+            return math.sqrt((x-x0)**2+(y-y0)**2)-d
+        
+        x0= self.window_x
+        y0= self.window_y*0.5
+        d = self.look_ahead
+        x_sol = fsolve(dis,1,args=(x0,y0,d,a,b,c))[0]
+        y_sol = fun_y(x_sol)
+        target_x = y_sol - 0.5*self.window_y
+        target_y = self.window_x - x_sol
 
         return target_x, target_y
 
@@ -113,28 +109,47 @@ class PurePursuitController(object):
 
             # 计算 alpha
             # alpha 是车辆朝向与目标点连线之间的夹角
-            alpha = math.atan2(target_y, target_x)
+            alpha = math.atan2(target_x, target_y)
 
             # 计算转向角度（使用纯追踪控制算法）
             # delta = arctangent(2 * L * sin(alpha) / Ld)
+
+
+            scale_coef = 0.9/480
+            k = 0.15
             L = self.wheelbase
-            Ld = math.hypot(target_x, target_y)  # 前瞻距离
-            steering_angle = math.atan2(2 * L * math.sin(alpha), Ld)
+            Ld = math.hypot(target_x, target_y) * scale_coef  # 前瞻距离
+            steering_angle = math.atan2(k * 2 * L * math.sin(alpha), Ld )
+            angle   = -steering_angle * 1
+            # ----------------- tuning this part as needed -----------------
 
-            # 限制转向角在物理范围内
-            max_steering_angle = 0.4  # 弧度（约23度）
-            steering_angle = np.clip(steering_angle, -max_steering_angle, max_steering_angle)
+            f_delta = round(np.clip(angle, -0.3, 0.3), 3)
 
-            # 发布控制指令
+            f_delta_deg = round(np.degrees(f_delta))
+
+            # print("Current index: " + str(self.goal))
+            # ct_error = round(np.sin(alpha) * Ld, 3)
+            # print("Crosstrack Error: " + str(ct_error))
+            # print("Front steering angle: " + str(f_delta_deg) + " degrees")
+            # print("\n")
+
             self.drive_msg.header.stamp = rospy.get_rostime()
-            self.drive_msg.drive.steering_angle = steering_angle
+            self.drive_msg.drive.steering_angle = f_delta
             self.ctrl_pub.publish(self.drive_msg)
+            # 限制转向角在物理范围内
+            # max_steering_angle = 0.4  # 弧度（约23度）
+            # steering_angle = np.clip(steering_angle, -max_steering_angle, max_steering_angle)
 
-            # 调试信息
-            steering_angle_deg = math.degrees(steering_angle)
-            print(f"Target point: ({target_x:.3f}, {target_y:.3f})")
-            print(f"Steering angle: {steering_angle_deg:.2f} degrees")
-            print("\n")
+            # # 发布控制指令
+            # self.drive_msg.header.stamp = rospy.get_rostime()
+            # self.drive_msg.drive.steering_angle = steering_angle
+            # self.ctrl_pub.publish(self.drive_msg)
+
+            # # 调试信息
+            # steering_angle_deg = math.degrees(steering_angle)
+            # print(f"Target point: ({target_x:.3f}, {target_y:.3f})")
+            # print(f"Steering angle: {steering_angle_deg:.2f} degrees")
+            # print("\n")
 
             self.rate.sleep()
 
