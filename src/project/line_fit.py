@@ -220,7 +220,7 @@ def viz1(binary_warped, ret, save_file=None):
 	plt.gcf().clear()
 
 
-def bird_fit(binary_warped, ret, save_file=None):
+def bird_fit(binary_warped, ret, save_file=None, target_point=[0,0]):
 	"""
 	Visualize the predicted lane lines with margin, on binary warped image
 	save_file is a string representing where to save the image (if None, then just display)
@@ -276,12 +276,15 @@ def bird_fit(binary_warped, ret, save_file=None):
 
 	# cv2.imshow('bird',result)
 	# cv2.imwrite('bird_from_cv2.png', result)
+	
+ 	# Add the target point
+	plt.scatter(target_point[0], target_point[1], color='red', s=100)
 
 	# if save_file is None:
 	# 	plt.show()
 	# else:
 	# 	plt.savefig(save_file)
-	# plt.gcf().clear()
+	plt.gcf().clear()
 
 	return result
 

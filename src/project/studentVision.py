@@ -26,6 +26,10 @@ class lanenet_detector():
         self.sub_image = rospy.Subscriber('/D435I/color/image_raw', Image, self.img_callback, queue_size=1)
         self.pub_image = rospy.Publisher("lane_detection/annotate", Image, queue_size=1)
         self.pub_bird = rospy.Publisher("lane_detection/birdseye", Image, queue_size=1)
+        
+        # Get target point
+        self.sub_target = rospy.Subscriber('/lane_detection/target_point', Float32MultiArray, self.target_callback)
+        self.target_point = [0,0]
         self.line_coefficients = [0.0, 0.0, 0.0]
         # Publish three fload values
         self.pub_fit_line_coeff = rospy.Publisher("/lane_detection/fit_line_coeff", Float32MultiArray, queue_size=1)
@@ -34,6 +38,10 @@ class lanenet_detector():
         self.right_line = Line(n=5)
         self.detected = False
         self.hist = True
+
+    def target_callback(self, data):
+        # Get target point
+        self.target_point = data.data
 
 
     def publish_coefficients(self):
@@ -321,7 +329,7 @@ class lanenet_detector():
             bird_fit_img = None
             combine_fit_img = None
             if ret is not None:
-                bird_fit_img = bird_fit(img_birdeye, ret, save_file=None)
+                bird_fit_img = bird_fit(img_birdeye, ret, save_file=None, target_point=self.target_point)
                 # Publish ret information
                 self.line_coefficients = [mid_fit[0], mid_fit[1], mid_fit[2]]
                 self.publish_coefficients()

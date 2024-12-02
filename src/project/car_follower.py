@@ -46,6 +46,13 @@ class PurePursuitController(object):
             AckermannDriveStamped,
             queue_size=1
         )
+        
+        # 发布target point
+        self.target_pub = rospy.Publisher(
+            '/lane_detection/target_point',
+            Float32MultiArray,
+            queue_size=1
+        )
 
         self.drive_msg = AckermannDriveStamped()
         self.drive_msg.header.frame_id = "f1tenth_control"
@@ -93,6 +100,10 @@ class PurePursuitController(object):
         d = self.look_ahead
         x_sol = fsolve(dis,1,args=(x0,y0,d,a,b,c))[0]
         y_sol = fun_y(x_sol)
+        
+        # 发布目标点
+        self.target_pub.publish(Float32MultiArray(data=[x_sol, y_sol]))
+        
         target_x = y_sol - 0.5*self.window_y
         target_y = self.window_x - x_sol
 
