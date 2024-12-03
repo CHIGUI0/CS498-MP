@@ -37,7 +37,7 @@ class PurePursuitController(object):
 
         self.rate = rospy.Rate(80)
 
-        self.look_ahead = 0.4 * 480/0.9  # 前瞻距离，单位：米
+        self.look_ahead =  480*0.9 # 前瞻距离，单位：米
         self.wheelbase = 0.325  # 车辆轴距，单位：米
 
         # 发布控制指令
@@ -98,14 +98,16 @@ class PurePursuitController(object):
         x0= self.window_x
         y0= self.window_y*0.5
         d = self.look_ahead
-        x_sol = fsolve(dis,1,args=(x0,y0,d,a,b,c))[0]
+        x_sol = fsolve(dis,320,args=(x0,y0,d,a,b,c))[0]
         y_sol = fun_y(x_sol)
         
         # 发布目标点
+        print(x_sol)
+        print(y_sol)
         self.target_pub.publish(Float32MultiArray(data=[x_sol, y_sol]))
         
         target_x = y_sol - 0.5*self.window_y
-        target_y = self.window_x - x_sol
+        target_y = self.window_x - x_sol+0.4*480/0.9
 
         return target_x, target_y
 
@@ -127,7 +129,7 @@ class PurePursuitController(object):
 
 
             scale_coef = 0.9/480
-            k = 0.15
+            k = 0.6
             L = self.wheelbase
             Ld = math.hypot(target_x, target_y) * scale_coef  # 前瞻距离
             steering_angle = math.atan2(k * 2 * L * math.sin(alpha), Ld )

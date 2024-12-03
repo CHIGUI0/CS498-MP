@@ -267,18 +267,22 @@ def bird_fit(binary_warped, ret, save_file=None, target_point=[0,0]):
 	cv2.fillPoly(window_img, np.int_([mid_line_pts]), (0,255, 0))
 	# cv2.fillPoly(window_img, np.int_([right_line_pts]), (0,255, 0))
 	result = cv2.addWeighted(out_img, 1, window_img, 0.3, 0)
+	cv2.circle(result,(int(target_point[1]),int(target_point[0])),10,(0,0,255),-1)
+	
+	for i in range(1,480):
+		cv2.line(result,(int(mid_fitx[i-1]),int(ploty[i-1])),(int(mid_fitx[i]),int(ploty[i])),(0,0,255),2)
 
-	plt.imshow(result)
-	plt.plot(mid_fitx, ploty, color='yellow')
-	# plt.plot(right_fitx, ploty, color='yellow')
-	plt.xlim(0, 1280)
-	plt.ylim(720, 0)
+	# plt.imshow(result)
+	# plt.plot(mid_fitx, ploty, color='yellow')
+	# # plt.plot(right_fitx, ploty, color='yellow')
+	# plt.xlim(0, 640)
+	# plt.ylim(480, 0)
 
 	# cv2.imshow('bird',result)
 	# cv2.imwrite('bird_from_cv2.png', result)
 	
  	# Add the target point
-	plt.scatter(target_point[0], target_point[1], color='red', s=100)
+	# plt.scatter(target_point[0], target_point[1], color='white', s=100)
 
 	# if save_file is None:
 	# 	plt.show()

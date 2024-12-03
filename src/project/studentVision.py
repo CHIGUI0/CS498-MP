@@ -53,7 +53,7 @@ class lanenet_detector():
         
         # 发布消息
         self.pub_fit_line_coeff.publish(coeff_msg)
-        # rospy.loginfo(f"Published coefficients: {self.line_coefficients}")
+        rospy.loginfo(f"Published coefficients: {self.line_coefficients}")
 
     def img_callback(self, data):
 
@@ -137,10 +137,10 @@ class lanenet_detector():
         # yellow_lower = np.array([np.round(40/2), np.round(255*0.5), np.round(200)])  # Lower hue to capture more yellow shades
         # yellow_upper = np.array([np.round(80/2), np.round(255*0.8), np.round(255)])  # Higher hue to capture more yellow shades
         # Project 
-        r1_lower = np.array([np.round(0/2), np.round(255*0.2), np.round(255*0.2)])  # Lower hue to capture more yellow shades
+        r1_lower = np.array([np.round(0/2), np.round(255*0.2), np.round(255*0.25)])  # Lower hue to capture more yellow shades
         r1_upper = np.array([np.round(20/2), np.round(255*1), np.round(255)])  # Higher hue to capture more yellow shades
         # Project 
-        r2_lower = np.array([np.round(340/2), np.round(255*0.2), np.round(255*0.2)])  # Lower hue to capture more yellow shades
+        r2_lower = np.array([np.round(340/2), np.round(255*0.2), np.round(255*0.25)])  # Lower hue to capture more yellow shades
         r2_upper = np.array([np.round(360/2), np.round(255*1), np.round(255)])  # Higher hue to capture more yellow shades
 
         # Extended White HLS ranges
